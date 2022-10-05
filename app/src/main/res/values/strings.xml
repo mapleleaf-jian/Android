@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="app_text">Hello</string>
+    <string name="app_go">跳转</string>
+</resources>
