@@ -10,7 +10,7 @@
         android:theme="@style/Theme.MyApplication">
 
         <activity
-            android:name=".ScrollActivity"
+            android:name=".ButtonActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
