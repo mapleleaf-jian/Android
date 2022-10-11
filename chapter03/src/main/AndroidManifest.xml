@@ -10,7 +10,7 @@
         android:theme="@style/Theme.MyApplication">
 
         <activity
-            android:name=".Button2Activity"
+            android:name=".LongClickActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
