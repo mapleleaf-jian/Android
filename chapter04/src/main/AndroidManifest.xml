@@ -8,6 +8,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
+
         <activity
             android:name=".LoginSuccessActivity"
             android:exported="false">
@@ -15,7 +16,6 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-
         <activity
             android:name=".SecondActivity"
             android:exported="false">
@@ -38,7 +38,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name=".UriActivity"
             android:exported="true"
             android:launchMode="standard">
             <intent-filter>
