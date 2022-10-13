@@ -16,3 +16,4 @@ rootProject.name = "My Application"
 include ':app'
 include ':chapter03'
 include ':Calculator'
+include ':chapter04'
