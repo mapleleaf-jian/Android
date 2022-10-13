@@ -8,6 +8,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
+
         <activity
             android:name=".ResponseActivity"
             android:exported="false">
@@ -15,7 +16,6 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-
         <activity
             android:name=".ReceiveActivity"
             android:exported="false">
@@ -52,7 +52,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".RequestActivity"
+            android:name=".ReadStringActivity"
             android:exported="true"
             android:launchMode="standard">
             <intent-filter>
@@ -62,8 +62,8 @@
             </intent-filter>
 
             <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
+                android:name="weather"
+                android:value="晴天" />
         </activity>
     </application>
 
