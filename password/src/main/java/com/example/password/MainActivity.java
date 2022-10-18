@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -40,6 +41,8 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private Button btn_login;
     private String mPassword = "111111";
     private String verify_code;
+    private SharedPreferences preferences;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +80,23 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         // 登录按钮
         btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(this);
+
+        // 记住密码功能：共享参数
+        preferences = getSharedPreferences("config", MODE_PRIVATE);
+        // 读取共享参数
+        reload();
+    }
+
+    private void reload() {
+        boolean checked = preferences.getBoolean("isRemember", false);
+        // 如果上次登录勾选了记住密码，才读取值
+        if (checked) {
+            String phone = preferences.getString("phone", "");
+            String password = preferences.getString("password", "");
+            et_phone.setText(phone);
+            et_password.setText(password);
+            ck_remember_password.setChecked(checked);
+        }
     }
 
     @Override
@@ -165,5 +185,15 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         builder.setPositiveButton("确定", null);
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+
+        // 保存共享参数
+        SharedPreferences.Editor editor = preferences.edit();
+        boolean checked = ck_remember_password.isChecked();
+        if (checked) {
+            editor.putString("phone", et_phone.getText().toString());
+            editor.putString("password", et_password.getText().toString());
+            editor.putBoolean("isRemember", checked);
+            editor.apply();
+        }
     }
 }
