@@ -24,7 +24,7 @@ public class TimePickerDialogActivity extends AppCompatActivity implements View.
     public void onClick(View v) {
         Calendar calendar = Calendar.getInstance();
         TimePickerDialog dialog = new TimePickerDialog(this, this,
-                calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE), true);
+                calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
         dialog.show();
     }
 
