@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.RemoteAction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -25,8 +26,11 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.password.database.LoginDBHelper;
+import com.example.password.entity.LoginInfo;
 import com.example.password.util.PasswordUtils;
 
+import java.util.List;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements RadioGroup.OnCheckedChangeListener, View.OnFocusChangeListener, View.OnClickListener {
@@ -41,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private Button btn_login;
     private String mPassword = "111111";
     private String verify_code;
-    private SharedPreferences preferences;
+    private LoginDBHelper loginDBHelper;
 
 
     @Override
@@ -81,22 +85,33 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(this);
 
-        // 记住密码功能：共享参数
-        preferences = getSharedPreferences("config", MODE_PRIVATE);
-        // 读取共享参数
-        reload();
+        // 自动填充密码
+        et_password.setOnFocusChangeListener(this);
     }
 
     private void reload() {
-        boolean checked = preferences.getBoolean("isRemember", false);
-        // 如果上次登录勾选了记住密码，才读取值
-        if (checked) {
-            String phone = preferences.getString("phone", "");
-            String password = preferences.getString("password", "");
-            et_phone.setText(phone);
-            et_password.setText(password);
-            ck_remember_password.setChecked(checked);
+        LoginInfo loginInfo = loginDBHelper.queryTop();
+        if (loginInfo != null && loginInfo.getRemember()) {
+            et_phone.setText(loginInfo.getPhone());
+            et_password.setText(loginInfo.getPassword());
+            ck_remember_password.setChecked(loginInfo.getRemember());
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        loginDBHelper = LoginDBHelper.getInstance(this);
+        loginDBHelper.openReadLink();
+        loginDBHelper.openWriteLink();
+
+        reload();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        loginDBHelper.closeLink();
     }
 
     @Override
@@ -121,13 +136,23 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     @Override
     public void onFocusChange(View v, boolean hasFocus) {
-        if (hasFocus) {
+        if (v.getId() == R.id.et_password && hasFocus) {
             String phone = et_phone.getText().toString();
             if (phone == null || phone.length() < 11) {
                 // 提示信息
                 Toast.makeText(this, "请输入11位手机号码", Toast.LENGTH_SHORT).show();
                 // 手机号码输入框获得焦点
                 et_phone.requestFocus();
+            } else {
+                // 自动填充密码，查到了记录，自动填充；否则清空密码输入框
+                LoginInfo loginInfo = loginDBHelper.queryByPhone(phone);
+                if (loginInfo != null) {
+                    et_password.setText(loginInfo.getPassword());
+                    ck_remember_password.setChecked(loginInfo.getRemember());
+                } else {
+                    et_password.setText("");
+                    ck_remember_password.setChecked(false);
+                }
             }
         }
     }
@@ -182,18 +207,20 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         builder.setTitle("登录成功");
         String desc = String.format("恭喜登录成功，手机号为%s", et_phone.getText().toString());
         builder.setMessage(desc);
-        builder.setPositiveButton("确定", null);
+        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
 
-        // 保存共享参数
-        SharedPreferences.Editor editor = preferences.edit();
+        // 保存到数据库中，先删除，再保存
+        String phone = et_phone.getText().toString();
+        String password = et_password.getText().toString();
         boolean checked = ck_remember_password.isChecked();
-        if (checked) {
-            editor.putString("phone", et_phone.getText().toString());
-            editor.putString("password", et_password.getText().toString());
-            editor.putBoolean("isRemember", checked);
-            editor.apply();
-        }
+        LoginInfo loginInfo = new LoginInfo(phone, password, checked);
+        loginDBHelper.save(loginInfo);
     }
 }
