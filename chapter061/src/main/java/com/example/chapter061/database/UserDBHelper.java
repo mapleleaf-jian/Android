@@ -74,9 +74,11 @@ public class UserDBHelper extends SQLiteOpenHelper  {
         db.execSQL(sql);
     }
 
+    // 在数据库版本变更的时候会执行 onUpgrade 方法
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        String sql = "ALTER TABLE " + TABLE_NAME + " ADD COLUMN phone VARCHAR;";
+        db.execSQL(sql);
     }
 
     // 插入数据的方法
