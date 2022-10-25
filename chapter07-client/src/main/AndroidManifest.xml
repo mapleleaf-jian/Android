@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!--出于安全考虑，Android 11 要求应用事先说明需要访问的其他软件包-->
+    <!-- 出于安全考虑，Android 11 要求应用事先说明需要访问的其他软件包 -->
     <queries>
-        <!--<package android:name="com.example.chapter07_server"/>-->
+
+        <!-- <package android:name="com.example.chapter07_server"/> -->
         <provider android:authorities="com.example.chapter07_server.provider.UserContentProvider" />
     </queries>
+    
+    <!--定义权限-->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.SEND_SMS"/>
 
     <application
         android:allowBackup="true"
@@ -14,7 +21,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
         <activity
-            android:name=".ContentWriteActivity"
+            android:name=".PermissionLazyActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
