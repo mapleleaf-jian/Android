@@ -64,12 +64,12 @@ public class PermissionHungryActivity extends AppCompatActivity implements View.
                             case Manifest.permission.WRITE_CONTACTS:
                                 Toast.makeText(this, "通讯录权限获取失败", Toast.LENGTH_SHORT).show();
                                 jumpToSetting();
-                                break;
+                                return;
                             case Manifest.permission.READ_SMS:
                             case Manifest.permission.SEND_SMS:
                                 Toast.makeText(this, "收发短信权限获取成功", Toast.LENGTH_SHORT).show();
                                 jumpToSetting();
-                                break;
+                                return;
                         }
                     }
                 }
