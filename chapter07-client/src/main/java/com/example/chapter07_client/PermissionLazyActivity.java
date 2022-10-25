@@ -4,7 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -55,6 +58,7 @@ public class PermissionLazyActivity extends AppCompatActivity implements View.On
                     Log.d("permission", "通讯录权限获取成功");
                 } else {
                     Toast.makeText(this, "通讯录权限获取失败", Toast.LENGTH_SHORT).show();
+                    jumpToSetting();
                 }
                 break;
             case REQUEST_CODE_SMS:
@@ -62,8 +66,18 @@ public class PermissionLazyActivity extends AppCompatActivity implements View.On
                     Log.d("permission", "收发短信权限获取成功");
                 } else {
                     Toast.makeText(this, "收发短信权限获取失败", Toast.LENGTH_SHORT).show();
+                    jumpToSetting();
                 }
                 break;
         }
+    }
+
+    // 跳转到设置页面
+    private void jumpToSetting() {
+        Intent intent = new Intent();
+        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.fromParts("package", getPackageName(), null));
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 }
