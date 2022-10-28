@@ -10,11 +10,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.shopping.adapter.GoodsAdapter;
 import com.example.shopping.database.ShoppingDBHelper;
 import com.example.shopping.entity.CartInfo;
 import com.example.shopping.entity.GoodsInfo;
@@ -22,12 +24,12 @@ import com.example.shopping.entity.GoodsInfo;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ShoppingChannelActivity extends AppCompatActivity implements View.OnClickListener {
+public class ShoppingChannelActivity extends AppCompatActivity implements View.OnClickListener, GoodsAdapter.AddCartListener {
     // 声明一个商品数据库帮助器的对象
     private ShoppingDBHelper mHelper;
     private TextView tv_count;
     private TextView tv_title;
-    private GridLayout gl_channel;
+    private GridView gv_channel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +38,7 @@ public class ShoppingChannelActivity extends AppCompatActivity implements View.O
 
         tv_count = findViewById(R.id.tv_count);
         tv_title = findViewById(R.id.tv_title);
-        gl_channel = findViewById(R.id.gl_channel);
+        gv_channel = findViewById(R.id.gv_channel);
         tv_title.setText("手机商场");
 
         // 返回和跳转到购物车页面
@@ -68,49 +70,15 @@ public class ShoppingChannelActivity extends AppCompatActivity implements View.O
     }
 
     private void showGoods() {
-        // 商品条目是一个线性布局，设置布局的宽度为屏幕的一半
-        int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(screenWidth / 2, LinearLayout.LayoutParams.WRAP_CONTENT);
         // 查询全部记录
         List<GoodsInfo> list = mHelper.queryAllGoods();
-
-        // 移除下面的所有子视图
-        gl_channel.removeAllViews();
-
-        for (GoodsInfo info : list) {
-            // 获取布局文件item_goods.xml 的根视图
-            View view = LayoutInflater.from(this).inflate(R.layout.item_goods, null);
-            ImageView iv_thumb = view.findViewById(R.id.iv_thumb);
-            TextView tv_name = view.findViewById(R.id.tv_name);
-            TextView tv_price = view.findViewById(R.id.tv_price);
-            Button btn_add = view.findViewById(R.id.btn_add);
-            // 给控件设置值
-            iv_thumb.setImageURI(Uri.parse(info.picPath));
-            tv_name.setText(info.name);
-            tv_price.setText(String.valueOf(info.price));
-
-            // 商品详情
-            iv_thumb.setOnClickListener(v -> {
-                Intent intent = new Intent(ShoppingChannelActivity.this, ShoppingDetailActivity.class);
-                Bundle bundle = new Bundle();
-                bundle.putInt("goods_id", info.id);
-                intent.putExtras(bundle);
-                startActivity(intent);
-            });
-
-            // 把商品视图添加到网格布局
-            gl_channel.addView(view, params);
-
-            // 加入购物车
-            btn_add.setOnClickListener(v -> {
-                addToCart(info.id, info.name);
-            });
-        }
+        GoodsAdapter adapter = new GoodsAdapter(this, list, this);
+        gv_channel.setAdapter(adapter);
     }
 
     // 将指定编号的的商品加入数据库
-    private void addToCart(int goodsId, String name) {
+    @Override
+    public void addToCart(int goodsId, String name) {
         mHelper.insertCartInfoById(goodsId);
         int count = ++MyApplication.getInstance().goodsCount;
         Toast.makeText(this, "加入一部" + name + "成功", Toast.LENGTH_SHORT).show();
