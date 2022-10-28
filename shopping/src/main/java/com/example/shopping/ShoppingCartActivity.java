@@ -9,11 +9,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.shopping.adapter.CartAdapter;
 import com.example.shopping.database.ShoppingDBHelper;
 import com.example.shopping.entity.CartInfo;
 import com.example.shopping.entity.GoodsInfo;
@@ -23,16 +26,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ShoppingCartActivity extends AppCompatActivity implements View.OnClickListener {
+public class ShoppingCartActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
     private TextView tv_title;
     private TextView tv_count;
-    private LinearLayout ll_cart;
+    private ListView lv_cart;
     private ShoppingDBHelper mHelper;
     private List<CartInfo> cartInfos; // 全部的购物车信息
     private HashMap<Integer, GoodsInfo> mGoodsMap; // 缓存每一条商品记录
     private TextView tv_total_price;
     private LinearLayout ll_empty;
     private LinearLayout ll_content;
+    private CartAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +46,7 @@ public class ShoppingCartActivity extends AppCompatActivity implements View.OnCl
         tv_title.setText("购物车");
         tv_count = findViewById(R.id.tv_count);
         tv_count.setText(String.valueOf(MyApplication.getInstance().goodsCount));
-        ll_cart = findViewById(R.id.ll_cart);
+        lv_cart = findViewById(R.id.lv_cart);
 
         tv_total_price = findViewById(R.id.tv_total_price);
         ll_empty = findViewById(R.id.ll_empty);
@@ -63,9 +67,7 @@ public class ShoppingCartActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void showCart() {
-        // 移除下面的所有子视图
-        ll_cart.removeAllViews();
-
+        // 查询所有的购物车信息
         cartInfos = mHelper.queryAllCarts();
         if (cartInfos.size() == 0) {
             return ;
@@ -75,51 +77,17 @@ public class ShoppingCartActivity extends AppCompatActivity implements View.OnCl
             // 根据id查询商品信息
             GoodsInfo goodsInfo = mHelper.queryGoodsById(info.goodsId);
             mGoodsMap.put(goodsInfo.id, goodsInfo);
-            // 获取布局文件item_cart.xml 的根视图
-            View view = LayoutInflater.from(this).inflate(R.layout.item_cart, null);
-            ImageView iv_thumb = view.findViewById(R.id.iv_thumb);
-            TextView tv_name = view.findViewById(R.id.tv_name);
-            TextView tv_desc = view.findViewById(R.id.tv_desc);
-            TextView tv_price = view.findViewById(R.id.tv_price);
-            TextView tv_count = view.findViewById(R.id.tv_count);
-            TextView tv_sum = view.findViewById(R.id.tv_sum);
+            info.goods = goodsInfo;
 
-            iv_thumb.setImageURI(Uri.parse(goodsInfo.picPath));
-            tv_name.setText(goodsInfo.name);
-            tv_desc.setText(goodsInfo.description);
-            tv_price.setText(String.valueOf(goodsInfo.price));
-            tv_count.setText(String.valueOf(info.count));
-            tv_sum.setText(String.valueOf(goodsInfo.price * info.count));
-
-            // 给商品行添加长按点击事件，长按删除
-            view.setOnLongClickListener(v -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(ShoppingCartActivity.this);
-                builder.setTitle("删除");
-                builder.setMessage("确认删除" + goodsInfo.name + "吗？");
-                builder.setPositiveButton("删除", (dialog, which) -> {
-                    // 移除当前视图
-                    ll_cart.removeView(view);
-                    // 删除该条记录
-                    deleteCart(info);
-                });
-                builder.setNegativeButton("取消", null);
-                AlertDialog alertDialog = builder.create();
-                alertDialog.show();
-                return true;
-            });
-
-            // 跳转到商品详情页
-            view.setOnClickListener(v -> {
-                Intent intent = new Intent(ShoppingCartActivity.this, ShoppingDetailActivity.class);
-                Bundle bundle = new Bundle();
-                bundle.putInt("goods_id", info.goodsId);
-                intent.putExtras(bundle);
-                startActivity(intent);
-            });
-
-            // 加入布局
-            ll_cart.addView(view);
+            // 新建适配器
+            adapter = new CartAdapter(this, cartInfos);
+            lv_cart.setAdapter(adapter);
+            // 点击事件，跳转到商品详情页面
+            lv_cart.setOnItemClickListener(this);
+            // 长按删除
+            lv_cart.setOnItemLongClickListener(this);
         }
+
         // 重新计算购物车的总金额
         refreshTotalPrice();
     }
@@ -145,6 +113,8 @@ public class ShoppingCartActivity extends AppCompatActivity implements View.OnCl
         if (MyApplication.getInstance().goodsCount == 0) {
             ll_empty.setVisibility(View.VISIBLE);
             ll_content.setVisibility(View.GONE);
+            // 通知适配器数据发生了变化
+            adapter.notifyDataSetChanged();
         } else {
             ll_empty.setVisibility(View.GONE);
             ll_content.setVisibility(View.VISIBLE);
@@ -188,5 +158,35 @@ public class ShoppingCartActivity extends AppCompatActivity implements View.OnCl
                 startActivity(intent);
                 break;
         }
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        CartInfo info = cartInfos.get(position);
+        Intent intent = new Intent(ShoppingCartActivity.this, ShoppingDetailActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putInt("goods_id", info.goodsId);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        CartInfo info = cartInfos.get(position);
+        AlertDialog.Builder builder = new AlertDialog.Builder(ShoppingCartActivity.this);
+        builder.setTitle("删除");
+        builder.setMessage("确认删除" + info.goods.name + "吗？");
+        builder.setPositiveButton("删除", (dialog, which) -> {
+            // 从集合中移除数据
+            cartInfos.remove(info);
+            // 通知适配器数据发生了变化
+            adapter.notifyDataSetChanged();
+            // 删除该条记录
+            deleteCart(info);
+        });
+        builder.setNegativeButton("取消", null);
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+        return true;
     }
 }
